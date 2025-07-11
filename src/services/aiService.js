@@ -1,21 +1,22 @@
-const axios = require('axios');
-const { openaiKey } = require('../config/config');
-
-async function generateResponse(prompt) {
+// ✅ Token agora em HttpOnly Cookie (seguro contra XSS)
+async function verificarTokenJWT() {
   try {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-4-turbo',
-      messages: [{ role: 'user', content: prompt }]
-    }, {
-      timeout: 10000, // 10s timeout
-      headers: { Authorization: `Bearer ${openaiKey}` }
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/proxy/token`, {
+      credentials: 'include' // Para cookies HttpOnly
     });
-
-    return response.data.choices[0].message.content;
+    
+    if (!response.ok) throw new Error("Falha na autenticação");
+    
+    const data = await response.json();
+    return !!data.token; // true se válido
   } catch (error) {
-    console.error('OpenAI error:', error.response?.data || error.message);
-    throw new Error('Failed to generate AI response');
+    console.error("Erro na autenticação:", error);
+    return false;
   }
 }
 
-module.exports = { generateResponse };
+// Exemplo de logout (remove cookie)
+function logout() {
+  document.cookie = "jwt_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+}
+
