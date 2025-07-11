@@ -1,3 +1,14 @@
+'use strict';
+
+// Remover qualquer uso de alias e importar diretamente
+const axios = require('axios');  // Caminho direto para axios
+const openaiKey = process.env.OPENAI_API_KEY;  // Certifique-se de que a chave da API está configurada corretamente no ambiente
+
+/**
+ * Gera uma resposta com base no prompt fornecido utilizando a API da OpenAI.
+ * @param {string} prompt - O prompt enviado para o modelo.
+ * @returns {string} - A resposta gerada pelo modelo.
+ */
 async function gerarResposta(prompt) {
   try {
     const resposta = await axios.post(
@@ -8,7 +19,7 @@ async function gerarResposta(prompt) {
       },
       {
         headers: {
-          Authorization: `Bearer ${openaiKey}`,
+          Authorization: `Bearer ${openaiKey}`,  // A chave de API deve ser configurada corretamente
           'Content-Type': 'application/json'
         }
       }
@@ -19,3 +30,5 @@ async function gerarResposta(prompt) {
     throw new Error('Erro ao acessar a API da OpenAI');
   }
 }
+
+module.exports = { gerarResposta };
