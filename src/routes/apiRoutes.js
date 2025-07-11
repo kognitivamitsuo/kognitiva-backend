@@ -1,13 +1,14 @@
-// src/routes/apiRoutes.js
+'use strict';
 
 const express = require('express');
 const router = express.Router();
 
-const iaController = require('../controllers/iaController');
-const feedbackController = require('../controllers/feedbackController');
-const diagnosticoController = require('../controllers/diagnosticoController');
-const contextoController = require('../controllers/contextoController');
-const authMiddleware = require('../middleware/authMiddleware');
+// Ajuste para caminhos relativos diretos
+const iaController = require('../controllers/iaController');  // Caminho relativo
+const feedbackController = require('../controllers/feedbackController');  // Caminho relativo
+const diagnosticoController = require('../controllers/diagnosticoController');  // Caminho relativo
+const contextoController = require('../controllers/contextoController');  // Caminho relativo
+const authMiddleware = require('../middleware/authMiddleware');  // Caminho relativo
 
 // Rota principal de execução da IA
 router.post('/executar', authMiddleware, iaController.executarIA);
