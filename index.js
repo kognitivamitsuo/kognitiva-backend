@@ -22,7 +22,10 @@ const dbPool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-const redis = new Redis(process.env.REDIS_URL);
+const redis = new Redis({
+  url: process.env.REDIS_URL,
+  connectTimeout: 5000, // Timeout de 5 segundos para conexão com Redis
+});
 
 // Middleware Stack
 app.use(helmet({
@@ -36,7 +39,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGIN || 'https://seu-dominio.com', // Limitar em produção
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
@@ -44,7 +47,7 @@ app.use(express.json({ limit: '10kb' }));
 
 // Rate Limiting
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000, // 15 minutos
   max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
@@ -54,7 +57,8 @@ app.get('/health', async (req, res) => {
   try {
     await Promise.all([
       dbPool.query('SELECT 1'),
-      redis.ping()
+      redis.ping(),
+      // Verificar outros serviços críticos, se necessário
     ]);
     res.json({
       status: 'healthy',
@@ -84,15 +88,17 @@ if (process.env.NODE_ENV === 'production') {
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   logger.error(`[${req.method}] ${req.path} - ${err.message}`);
-  
+
+  // Token error handling
   if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Token expirado ou inválido', code: 'TOKEN_INVALID' });
   }
 
-  res.status(500).json({ 
-    error: process.env.NODE_ENV === 'development' 
-      ? err.message 
-      : 'Internal server error' 
+  // Internal server error handling
+  res.status(500).json({
+    error: process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'Internal server error'
   });
 });
 
