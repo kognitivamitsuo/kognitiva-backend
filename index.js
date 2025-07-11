@@ -1,61 +1,29 @@
 'use strict';
 
-// Configuração robusta de aliases com fallback
+// Remover configuração de aliases, já que não será mais utilizado.
 const setupAliases = () => {
-  try {
-    // Método preferencial usando module-alias
-    const moduleAlias = require('module-alias');
-    const path = require('path');
-
-    const aliases = {
-      '@root': __dirname,
-      '@config': path.join(__dirname, 'src', 'config'),
-      '@controllers': path.join(__dirname, 'src', 'controllers'),
-      '@services': path.join(__dirname, 'src', 'services'),
-      '@routes': path.join(__dirname, 'src', 'routes'),
-      '@middleware': path.join(__dirname, 'src', 'middleware'),
-      '@models': path.join(__dirname, 'src', 'models'),
-      '@utils': path.join(__dirname, 'utils'),
-      '@agents': path.join(__dirname, 'src', 'agents')
-    };
-
-    moduleAlias.addAliases(aliases);
-    console.log('✅ Aliases configurados via module-alias');
-    return true;
-  } catch (error) {
-    console.warn('⚠️ Fallback para aliases via require-alias');
-    try {
-      // Fallback para require-alias se module-alias falhar
-      require('require-alias').setAliases({
-        '@root': '.',
-        '@config': './src/config',
-        // ... outros aliases no formato require
-      });
-      return true;
-    } catch (fallbackError) {
-      console.error('❌ Falha crítica nos dois métodos de aliases:', fallbackError);
-      return false;
-    }
-  }
+  // Não é mais necessário configurar aliases com module-alias ou require-alias
+  console.log('✅ Não há necessidade de configuração de aliases.');
+  return true;
 };
 
 // Inicialização segura
 const initializeApp = async () => {
-  // 1. Configuração de aliases
+  // 1. Não há mais necessidade de configurar aliases
   if (!setupAliases()) {
     process.exit(1);
   }
 
   // 2. Verificação de módulos críticos
   const criticalModules = [
-    '@services/iaService',
-    '@config/database',
-    '@middleware/auth'
+    './services/iaService',  // Caminho relativo
+    './config/database',     // Caminho relativo
+    './middleware/auth'      // Caminho relativo
   ];
 
   for (const module of criticalModules) {
     try {
-      require(module);
+      require(module);  // Carregamento dos módulos críticos com caminho relativo
       console.log(`✅ Módulo crítico carregado: ${module}`);
     } catch (error) {
       console.error(`❌ Falha ao carregar módulo crítico ${module}:`, error);
@@ -106,7 +74,7 @@ const initializeApp = async () => {
 
   // 5. Configuração de rotas com verificação
   try {
-    app.use('/api', require('@routes/apiRoutes'));
+    app.use('/api', require('./routes/apiRoutes'));  // Caminho relativo
     console.log('✅ Rotas configuradas com sucesso');
   } catch (routesError) {
     console.error('❌ Falha ao configurar rotas:', routesError);
