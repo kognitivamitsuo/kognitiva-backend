@@ -98,7 +98,7 @@
     "@root": ".",
     "@config": "src/config",
     "@controllers": "src/controllers",
-    "@services": "src/services",  // Corrigido para o caminho correto
+    "@services": "src/src/services",  
     "@routes": "src/routes",
     "@middleware": "src/middleware",
     "@models": "src/models",
