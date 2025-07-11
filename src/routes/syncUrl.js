@@ -1,14 +1,14 @@
-// routes/syncUrl.js
+'use strict';
 
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
 // Rota pública que retorna o valor de SYNC_URL para o frontend
-router.get("/proxy/sync_url", (req, res) => {
+router.get('/proxy/sync_url', (req, res) => {
   const syncUrl = process.env.SYNC_URL || null;
 
   if (!syncUrl) {
-    return res.status(500).json({ error: "SYNC_URL não configurado no backend." });
+    return res.status(500).json({ error: 'SYNC_URL não configurado no backend.' });
   }
 
   res.json({ sync_url: syncUrl });
