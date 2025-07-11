@@ -1,118 +1,129 @@
-// Configure module aliases before anything else
-require('module-alias/register');
-const path = require('path');
-const moduleAlias = require('module-alias');
-
-// Configura os aliases para diretórios específicos
-moduleAlias.addAliases({
-  '@services': path.join(__dirname, 'src', 'services'),
-  '@controllers': path.join(__dirname, 'src', 'controllers'),
-  '@routes': path.join(__dirname, 'src', 'routes'),
-  '@middleware': path.join(__dirname, 'src', 'middleware'),
-  '@models': path.join(__dirname, 'src', 'models'),
-  '@utils': path.join(__dirname, 'utils'),
-  '@agents': path.join(__dirname, 'src', 'agents')
-});
-
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const { Pool } = require('pg');
-const Redis = require('ioredis');
-const apiRoutes = require('@routes/apiRoutes');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Logger aprimorado
-const log = (...args) => console.log(`[${new Date().toISOString()}]`, ...args);
-
-// Verificação inicial de variáveis
-const requiredEnvVars = ['DATABASE_URL', 'REDIS_URL'];
-requiredEnvVars.forEach(env => {
-  if (!process.env[env]) {
-    log(`❌ Variável de ambiente faltando: ${env}`);
-    process.exit(1);
+{
+  "name": "kognitiva",
+  "version": "1.2.0",
+  "description": "Plataforma Kognitiva - API Inteligente",
+  "main": "index.js",
+  "scripts": {
+    "start": "NODE_ENV=production node --no-warnings -r module-alias/register index.js",
+    "dev": "nodemon --inspect -r module-alias/register index.js",
+    "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles --runInBand",
+    "test:ci": "cross-env NODE_ENV=test jest --ci --runInBand --coverage",
+    "verify:paths": "node ./scripts/verifyPaths.js",
+    "prestart": "npm run verify:paths",
+    "docker:build": "docker build -t kognitiva-api .",
+    "docker:run": "docker run -p 3000:3000 -e NODE_ENV=production kognitiva-api",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint --fix . --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "prepare": "husky install",
+    "healthcheck": "curl -fs http://localhost:$PORT/health || exit 1"
+  },
+  "dependencies": {
+    "@hapi/joi": "^17.1.1",
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "csurf": "^1.11.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^6.8.1",
+    "helmet": "^7.1.0",
+    "http-status-codes": "^2.2.0",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^2.5.1",
+    "module-alias": "^2.2.3",
+    "pg": "^8.11.3",
+    "pino": "^8.16.0",
+    "pino-pretty": "^10.2.3",
+    "swagger-ui-express": "^5.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-jest": "^27.6.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "jest-mock-extended": "^3.0.5",
+    "nodemon": "^3.0.2",
+    "prettier": "^3.1.0",
+    "supertest": "^6.3.3",
+    "testcontainers": "^10.4.0"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^@root/(.*)$": "<rootDir>/$1",
+      "^@config/(.*)$": "<rootDir>/src/config/$1",
+      "^@controllers/(.*)$": "<rootDir>/src/controllers/$1",
+      "^@services/(.*)$": "<rootDir>/src/services/$1",
+      "^@routes/(.*)$": "<rootDir>/src/routes/$1",
+      "^@middleware/(.*)$": "<rootDir>/src/middleware/$1",
+      "^@models/(.*)$": "<rootDir>/src/models/$1",
+      "^@utils/(.*)$": "<rootDir>/utils/$1",
+      "^@agents/(.*)$": "<rootDir>/src/agents/$1"
+    },
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "./jest.setup.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/",
+      "/src/config/",
+      "/src/middleware/"
+    ],
+    "testTimeout": 30000
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0",
+    "bun": ">=1.0.0"
+  },
+  "_moduleAliases": {
+    "@root": ".",
+    "@config": "./src/config",
+    "@controllers": "./src/controllers",
+    "@services": "./src/services",
+    "@routes": "./src/routes",
+    "@middleware": "./src/middleware",
+    "@models": "./src/models",
+    "@utils": "./utils",
+    "@agents": "./src/agents"
+  },
+  "files": [
+    "dist/",
+    "src/",
+    "index.js",
+    "knexfile.js",
+    "scripts/"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kognitivamitsuo/kognitiva-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kognitivamitsuo/kognitiva-backend/issues"
+  },
+  "homepage": "https://github.com/kognitivamitsuo/kognitiva-backend#readme",
+  "keywords": [
+    "AI",
+    "chatbot",
+    "nodejs",
+    "postgresql",
+    "redis",
+    "api",
+    "backend"
+  ],
+  "volta": {
+    "node": "18.18.2",
+    "npm": "9.8.1"
   }
-});
-
-// Inicialização
-log('✅ Inicializando backend Kognitiva...');
-log('🌐 Ambiente:', process.env.NODE_ENV || 'development');
-log('⚙️ Porta:', PORT);
-
-// Middlewares
-app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',  // Melhor configurar em produção
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
-}));
-app.use(express.json({ limit: '10mb' }));
-
-// PostgreSQL com reconexão automática
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  retry_strategy: (options) => {
-    if (options.error.code === 'ECONNREFUSED') {
-      return 5000; // Tentar novamente após 5 segundos
-    }
-    return 1000;
-  }
-});
-
-// Redis com tratamento de erros
-const redis = new Redis(process.env.REDIS_URL, {
-  retryStrategy: (times) => Math.min(times * 100, 5000)
-});
-
-// Verificações de saúde
-const healthCheck = async () => {
-  try {
-    await pool.query('SELECT 1');
-    await redis.ping();
-    return true;
-  } catch (error) {
-    log('❌ Health check falhou:', error);
-    return false;
-  }
-};
-
-// Rotas
-app.get('/', (req, res) => res.send('🧠 Kognitiva backend ativo!'));
-app.get('/health', async (req, res) => {
-  const isHealthy = await healthCheck();
-  res.status(isHealthy ? 200 : 503).json({
-    status: isHealthy ? 'healthy' : 'unhealthy',
-    db: isHealthy ? 'connected' : 'disconnected',
-    redis: isHealthy ? 'connected' : 'disconnected',
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.use('/api', apiRoutes);
-
-// Error handling
-app.use((err, req, res, next) => {
-  log('❌ Erro:', err.stack);
-  res.status(500).json({ error: 'Erro interno' });
-});
-
-// Inicialização segura
-const startServer = async () => {
-  try {
-    // Testar conexões antes de subir
-    await pool.query('SELECT 1');
-    await redis.ping();
-    
-    app.listen(PORT, '0.0.0.0', () => {
-      log(`🚀 Servidor rodando na porta ${PORT}`);
-      log(`🔗 Health check disponível em http://localhost:${PORT}/health`);
-    });
-  } catch (error) {
-    log('❌ Falha na inicialização:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+}
