@@ -19,13 +19,16 @@ const loadCriticalModule = (modulePath) => {
       const indexPath = path.join(fullPath, 'index.js');
       
       if (fs.existsSync(jsPath)) {
+        console.log(`Carregando módulo de ${jsPath}`);
         return require(jsPath);
       } else if (fs.existsSync(indexPath)) {
+        console.log(`Carregando módulo de ${indexPath}`);
         return require(indexPath);
       }
       throw new Error(`Módulo não encontrado em ${fullPath}`);
     }
     
+    console.log(`Carregando módulo de ${fullPath}`);
     return require(fullPath);
   } catch (error) {
     console.error(`❌ Falha ao carregar módulo crítico ${modulePath}:`, error);
@@ -33,6 +36,23 @@ const loadCriticalModule = (modulePath) => {
   }
 };
 
+const testConnections = async () => {
+  const timeout = 5000; // Tempo de espera para a conexão em ms
+  const pgPromise = dbPool.query('SELECT 1');
+  const redisPromise = redis.ping();
+  
+  const results = await Promise.race([
+    pgPromise,
+    redisPromise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de conexão')), timeout))
+  ]);
+  
+  if (results) {
+    console.log('✅ Conexões com banco de dados estabelecidas');
+  }
+};
+
+// Inicialização da aplicação
 const initializeApp = async () => {
   try {
     // 1. Configuração de aliases
@@ -42,8 +62,8 @@ const initializeApp = async () => {
 
     // 2. Módulos críticos com carregamento aprimorado
     const criticalModules = [
-      './services/iaService',
-      './config/database', 
+      './src/services/aiService',  // Caminho corrigido para o aiService.js
+      './config/database',
       './middleware/auth'
     ];
 
