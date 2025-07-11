@@ -1,4 +1,4 @@
-// inputFilter.js
+'use strict';
 
 /**
  * Remove espaços extras e normaliza a entrada do usuário.
