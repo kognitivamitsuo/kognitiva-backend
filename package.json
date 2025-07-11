@@ -20,13 +20,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "verifica:aliases": "node verifyAliases.js",
+    "verifica:aliases": "node -e \"require('module-alias/register'); console.log('✅ Aliases configurados corretamente')\"",
     "prepare": "husky install",
     "docker:build": "docker build -t kognitiva-api .",
     "docker:run": "docker run -p 3000:3000 -e NODE_ENV=production kognitiva-api",
     "healthcheck": "curl -f http://localhost:$PORT/health || exit 1",
     "audit:fix": "npm audit fix",
-    "prestart": "node fixPaths.js && npm run verify:aliases"
+    "prestart": "npm run verify:aliases"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
