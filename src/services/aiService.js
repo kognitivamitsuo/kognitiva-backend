@@ -1,21 +1,21 @@
-const axios = require('axios');
-const { openaiKey } = require('../config/config');
-
 async function gerarResposta(prompt) {
-  const resposta = await axios.post(
-    'https://api.openai.com/v1/chat/completions',
-    {
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }]
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${openaiKey}`,
-        'Content-Type': 'application/json'
+  try {
+    const resposta = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }]
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${openaiKey}`,
+          'Content-Type': 'application/json'
+        }
       }
-    }
-  );
-  return resposta.data.choices[0].message.content;
+    );
+    return resposta.data.choices[0].message.content;
+  } catch (error) {
+    console.error('Erro ao gerar resposta:', error);
+    throw new Error('Erro ao acessar a API da OpenAI');
+  }
 }
-
-module.exports = { gerarResposta };
