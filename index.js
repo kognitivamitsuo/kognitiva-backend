@@ -1,166 +1,135 @@
-'use strict';
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import rateLimit from 'express-rate-limit';
+import { createServer } from 'http';
+import { Pool } from 'pg';
+import Redis from 'ioredis';
+import dotenv from 'dotenv-safe';
+import jwt from 'jsonwebtoken';
+import logger from './utils/logger.js';
 
-const path = require('path');
-const fs = require('fs');
+// Load environment variables
+dotenv.config();
 
-// Configuração de aliases verificada
-const setupAliases = () => {
-  console.log('✅ Não há necessidade de configuração de aliases.');
-  return true;
-};
+// Initialize Express
+const app = express();
+const server = createServer(app);
 
-// Carregador de módulos críticos com verificação de caminho
-const loadCriticalModule = (modulePath) => {
-  try {
-    const fullPath = path.resolve(__dirname, modulePath);
-    
-    if (!fs.existsSync(fullPath)) {
-      const jsPath = `${fullPath}.js`;
-      const indexPath = path.join(fullPath, 'index.js');
-      
-      if (fs.existsSync(jsPath)) {
-        console.log(`Carregando módulo de ${jsPath}`);
-        return require(jsPath);
-      } else if (fs.existsSync(indexPath)) {
-        console.log(`Carregando módulo de ${indexPath}`);
-        return require(indexPath);
-      }
-      throw new Error(`Módulo não encontrado em ${fullPath}`);
+// Database connections
+const dbPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+const redis = new Redis(process.env.REDIS_URL);
+
+// Middleware Stack
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"]
     }
-    
-    console.log(`Carregando módulo de ${fullPath}`);
-    return require(fullPath);
-  } catch (error) {
-    console.error(`❌ Falha ao carregar módulo crítico ${modulePath}:`, error);
-    throw error;
   }
-};
+}));
 
-const testConnections = async () => {
-  const timeout = 5000; // Tempo de espera para a conexão em ms
-  const pgPromise = dbPool.query('SELECT 1');
-  const redisPromise = redis.ping();
-  
-  const results = await Promise.race([
-    pgPromise,
-    redisPromise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de conexão')), timeout))
-  ]);
-  
-  if (results) {
-    console.log('✅ Conexões com banco de dados estabelecidas');
-  }
-};
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE']
+}));
 
-// Inicialização da aplicação
-const initializeApp = async () => {
+app.use(express.json({ limit: '10kb' }));
+
+// Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Health Check Endpoint
+app.get('/health', async (req, res) => {
   try {
-    // 1. Configuração de aliases
-    if (!setupAliases()) {
-      throw new Error('Falha na configuração de aliases');
-    }
-
-    // 2. Módulos críticos com carregamento aprimorado
-    const criticalModules = [
-      './src/services/aiService',  // Caminho corrigido para o aiService.js
-      './models/db.js',  // Caminho corrigido para o db.js
-      './middleware/auth'
-    ];
-
-    for (const module of criticalModules) {
-      loadCriticalModule(module);
-      console.log(`✅ Módulo crítico carregado: ${module}`);
-    }
-
-    // 3. Configuração do Express com verificação de dependências
-    const express = require('express');
-    const app = express();
-
-    // Middlewares essenciais com tratamento de erro individual
-    const helmet = require('helmet');
-    const cors = require('cors');
-    const rateLimit = require('express-rate-limit');
-
-    app.use(helmet());
-    app.use(cors({
-      origin: process.env.CORS_ORIGIN || '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE']
-    }));
-    app.use(rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 100
-    }));
-
-    // 4. Conexões com banco de dados com teste de conexão
-    const { Pool } = require('pg');
-    const Redis = require('ioredis');
-
-    const dbPool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-    });
-
-    const redis = new Redis(process.env.REDIS_URL);
-
-    // Testa conexões com timeout
     await Promise.all([
-      dbPool.query('SELECT 1').catch(e => { 
-        throw new Error(`Falha na conexão PostgreSQL: ${e.message}`); 
-      }),
-      redis.ping().catch(e => { 
-        throw new Error(`Falha na conexão Redis: ${e.message}`); 
-      })
+      dbPool.query('SELECT 1'),
+      redis.ping()
     ]);
-    console.log('✅ Conexões com banco de dados estabelecidas');
-
-    // 5. Rotas com tratamento de erro explícito
-    const apiRoutes = require('./routes/apiRoutes');
-    app.use('/api', apiRoutes);
-    console.log('✅ Rotas configuradas com sucesso');
-
-    // 6. Inicialização do servidor
-    const PORT = process.env.PORT || 3000;
-    const server = app.listen(PORT, () => {
-      console.log(`🚀 Servidor rodando na porta ${PORT}`);
-      console.log(`🔍 Health Check: http://localhost:${PORT}/health`);
+    res.json({
+      status: 'healthy',
+      database: 'connected',
+      redis: 'connected'
     });
-
-    return server;
   } catch (error) {
-    console.error('💥 Falha crítica na inicialização:', error);
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message
+    });
+  }
+});
+
+// API Routes (with rate limiting)
+import apiRouter from './routes/apiRoutes.js';
+app.use('/api', apiLimiter, apiRouter);
+
+// Static Frontend Files (in production)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('public'));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve('public/index.html'));
+  });
+}
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  logger.error(`[${req.method}] ${req.path} - ${err.message}`);
+  
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+
+  res.status(500).json({ 
+    error: process.env.NODE_ENV === 'development' 
+      ? err.message 
+      : 'Internal server error' 
+  });
+});
+
+// Server Startup
+const PORT = process.env.PORT || 3000;
+const startServer = async () => {
+  try {
+    // Test database connections
+    await Promise.all([
+      dbPool.query('SELECT 1'),
+      redis.ping()
+    ]);
+    
+    server.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
-// Inicialização com tratamento de erro adequado
-initializeApp()
-  .then(server => {
-    const shutdown = async (signal) => {
-      console.log(`🛑 Recebido ${signal}, encerrando servidor...`);
-      try {
-        await server.close();
-        console.log('Servidor encerrado com sucesso');
-        process.exit(0);
-      } catch (err) {
-        console.error('Erro ao encerrar servidor:', err);
-        process.exit(1);
-      }
-    };
-
-    process.on('SIGTERM', () => shutdown('SIGTERM'));
-    process.on('SIGINT', () => shutdown('SIGINT'));
-
-    // Handlers para rejeições não tratadas e exceções
-    process.on('unhandledRejection', (reason) => {
-      console.error('Rejeição não tratada:', reason);
-    });
-
-    process.on('uncaughtException', (error) => {
-      console.error('Exceção não capturada:', error);
-      shutdown('uncaughtException');
-    });
-  })
-  .catch(error => {
-    console.error('💥 Falha na inicialização:', error);
-    process.exit(1);
+// Graceful Shutdown
+const shutdown = async () => {
+  logger.info('Shutting down gracefully...');
+  await Promise.all([
+    dbPool.end(),
+    redis.quit()
+  ]);
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
   });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+startServer();
