@@ -8,6 +8,7 @@ import Redis from 'ioredis';
 import dotenv from 'dotenv-safe';
 import jwt from 'jsonwebtoken';
 import logger from './utils/logger.js';
+import { config } from './config.js'; 
 
 // Load environment variables
 dotenv.config();
