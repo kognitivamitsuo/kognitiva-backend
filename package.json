@@ -4,25 +4,25 @@
   "description": "Plataforma Kognitiva (Fullstack)",
   "private": true,
   "scripts": {
-    // Backend
+    
     "start": "NODE_ENV=production node backend/src/index.js",
     "dev:backend": "nodemon backend/src/index.js",
     "test:backend": "cd backend && jest",
-    "test:integration": "cd backend && jest --runInBand",  // Testes de integração
-
-    // Frontend
+    "test:integration": "cd backend && jest --runInBand",  
+    
+    
     "dev:frontend": "vite frontend",
     "build:frontend": "vite build frontend",
     "preview:frontend": "vite preview frontend",
     "test:frontend": "jest frontend",  // Testes do frontend
 
-    // Tudo
+    
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "npm run build:frontend"
   },
   "dependencies": {
     // Backend
-    "express": "^5.0.0",  // Atualizado para a versão 5.x
+    "express": "^5.0.0",  
     "ioredis": "^5.3.2",
     "pg": "^8.11.3",
     "jsonwebtoken": "^9.0.2",
