@@ -1,13 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const aliases = {
-  "@root": "./",
-  "@config": "./config",
-  "@controllers": "./controllers",
-  "@services": "./services",
-  "@utils": "./utils"
-};
+// Carrega os aliases diretamente do package.json (se já configurado)
+const packageJson = require('./package.json');
+const aliases = packageJson._moduleAliases || {};
 
 console.log("🔍 Verificando aliases definidos em _moduleAliases...");
 
@@ -29,4 +25,3 @@ if (erroDetectado) {
 } else {
   console.log("🎯 Todos os aliases foram encontrados.");
 }
-
