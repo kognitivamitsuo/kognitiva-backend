@@ -1,4 +1,4 @@
-// logger.js
+'use strict';
 
 /**
  * Módulo de logger padronizado para o backend da Kognitiva
