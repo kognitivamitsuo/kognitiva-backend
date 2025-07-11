@@ -1,7 +1,7 @@
-// redisClient.js
+'use strict';
 
 const Redis = require('ioredis');
-const { redisUrl } = require('../config/config');
+const { redisUrl } = require('../config/config');  // Caminho relativo
 
 // Criação do cliente Redis com URL do .env
 const client = new Redis(redisUrl);
