@@ -1,11 +1,11 @@
 {
   "name": "kognitiva",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Plataforma Kognitiva - API Inteligente",
   "main": "index.js",
   "scripts": {
-    "verify:aliases": "node -e \"require('module-alias/register'); console.log('✅ Aliases configurados corretamente')\"",
-    "prestart": "npm run verify:aliases && node scripts/verifyPaths.js",
+    "verify:aliases": "node -e \"try { require('module-alias/register'); console.log('✅ Aliases configurados corretamente'); } catch(e) { console.error('❌ Erro nos aliases:', e.message); process.exit(1); }\"",
+    "prestart": "npm run verify:aliases",
     "start": "NODE_ENV=production node --no-warnings -r module-alias/register index.js",
     "start:prod": "npm run build && npm run start",
     "dev": "nodemon -r module-alias/register index.js",
@@ -47,7 +47,8 @@
     "module-alias": "^2.2.3",
     "pg": "^8.11.3",
     "pino": "^8.16.0",
-    "pino-pretty": "^10.2.3"
+    "pino-pretty": "^10.2.3",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
@@ -85,7 +86,8 @@
       "/tests/",
       "/src/config/",
       "/src/middleware/"
-    ]
+    ],
+    "testTimeout": 30000
   },
   "engines": {
     "node": ">=18.0.0",
@@ -93,15 +95,15 @@
     "bun": ">=1.0.0"
   },
   "_moduleAliases": {
-    "@root": "./",
-    "@config": "./src/config",
-    "@controllers": "./src/controllers",
-    "@services": "./src/services",
-    "@routes": "./src/routes",
-    "@middleware": "./src/middleware",
-    "@models": "./src/models",
-    "@utils": "./utils",
-    "@agents": "./src/agents"
+    "@root": ".",
+    "@config": "src/config",
+    "@controllers": "src/controllers",
+    "@services": "src/services",
+    "@routes": "src/routes",
+    "@middleware": "src/middleware",
+    "@models": "src/models",
+    "@utils": "utils",
+    "@agents": "src/agents"
   },
   "files": [
     "dist/",
