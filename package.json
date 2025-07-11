@@ -9,7 +9,7 @@
     "dev:backend": "nodemon backend/src/index.js",
     "dev:frontend": "vite frontend",
     "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm ci --omit=dev",
+    "build:backend": "cd src/backend && npm ci --omit=dev",  // Ajuste o caminho se necessário
     "build:frontend": "vite build frontend",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && jest --coverage",
