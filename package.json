@@ -1,6 +1,6 @@
 {
   "name": "kognitiva",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Plataforma Kognitiva - API Inteligente",
   "main": "index.js",
   "scripts": {
@@ -8,8 +8,8 @@
     "dev": "nodemon --inspect -r module-alias/register index.js",
     "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles --runInBand",
     "test:ci": "cross-env NODE_ENV=test jest --ci --runInBand --coverage",
-    "verify:paths": "node ./scripts/verifyPaths.js || echo 'Path verification skipped'",
-    "prestart": "npm run verify:paths && node -e \"try { require('module-alias/register'); console.log('Module aliases verified'); } catch(e) { console.error('Module alias verification failed:', e.message); process.exit(1); }\"",
+    "verify:paths": "echo 'Path verification not implemented'",
+    "prestart": "node -e \"try { require('module-alias/register'); console.log('✅ Module aliases verified'); } catch(e) { console.error('❌ Module alias verification failed:', e.message); process.exit(1); }\"",
     "docker:build": "docker build -t kognitiva-api .",
     "docker:run": "docker run -p 3000:3000 -e NODE_ENV=production kognitiva-api",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
@@ -17,7 +17,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "prepare": "husky install",
     "healthcheck": "curl -fs http://localhost:$PORT/health || exit 1",
-    "postinstall": "node -e \"try { require('module-alias/register'); console.log('Module aliases setup complete'); } catch(e) { console.error('Module alias setup failed:', e.message); process.exit(1); }\""
+    "postinstall": "node -e \"try { require('module-alias/register'); console.log('✅ Module aliases setup complete'); } catch(e) { console.error('❌ Module alias setup failed:', e.message); process.exit(1); }\""
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
@@ -102,9 +102,7 @@
     "dist/",
     "src/",
     "index.js",
-    "knexfile.js",
-    "scripts/",
-    "module-alias.js"
+    "knexfile.js"
   ],
   "license": "MIT",
   "repository": {
