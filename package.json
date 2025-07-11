@@ -8,7 +8,6 @@
     "dev": "NODE_ENV=development nodemon index.js",
     "test": "jest --watchAll --detectOpenHandles",
     "test:unit": "jest --runInBand --testPathPattern=unit",
-    "test:integration": "jest --runInBand --testPathPattern=integration",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -22,13 +21,11 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.7",
-    "eslint": "^7.30.0",
-    "jest": "^27.0.6"
+    "jest": "^27.0.6",
+    "eslint": "^7.30.0"
   },
   "engines": {
     "node": ">=14.0.0"
   },
-  "author": "Kognitiva",
   "license": "ISC"
 }
-
