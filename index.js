@@ -3,20 +3,18 @@
 const path = require('path');
 const fs = require('fs');
 
-// Improved alias setup with verification
+// Configuração de aliases verificada
 const setupAliases = () => {
   console.log('✅ Não há necessidade de configuração de aliases.');
   return true;
 };
 
-// Enhanced module loader with path verification
+// Carregador de módulos críticos com verificação de caminho
 const loadCriticalModule = (modulePath) => {
   try {
-    // Verify file exists before requiring
     const fullPath = path.resolve(__dirname, modulePath);
     
-    // Check for .js, .cjs, or directory with index.js
-    if (!fs.existsSync(fullPath) {
+    if (!fs.existsSync(fullPath)) {
       const jsPath = `${fullPath}.js`;
       const indexPath = path.join(fullPath, 'index.js');
       
@@ -25,27 +23,27 @@ const loadCriticalModule = (modulePath) => {
       } else if (fs.existsSync(indexPath)) {
         return require(indexPath);
       }
-      throw new Error(`Module not found at ${fullPath}`);
+      throw new Error(`Módulo não encontrado em ${fullPath}`);
     }
     
     return require(fullPath);
   } catch (error) {
     console.error(`❌ Falha ao carregar módulo crítico ${modulePath}:`, error);
-    throw error; // Re-throw for outer handling
+    throw error;
   }
 };
 
 const initializeApp = async () => {
   try {
-    // 1. Alias setup
+    // 1. Configuração de aliases
     if (!setupAliases()) {
-      throw new Error('Alias configuration failed');
+      throw new Error('Falha na configuração de aliases');
     }
 
-    // 2. Critical modules with enhanced loading
+    // 2. Módulos críticos com carregamento aprimorado
     const criticalModules = [
       './services/iaService',
-      './config/database',
+      './config/database', 
       './middleware/auth'
     ];
 
@@ -54,11 +52,11 @@ const initializeApp = async () => {
       console.log(`✅ Módulo crítico carregado: ${module}`);
     }
 
-    // 3. Express setup with dependency verification
+    // 3. Configuração do Express com verificação de dependências
     const express = require('express');
     const app = express();
 
-    // Essential middleware with individual error handling
+    // Middlewares essenciais com tratamento de erro individual
     const helmet = require('helmet');
     const cors = require('cors');
     const rateLimit = require('express-rate-limit');
@@ -73,7 +71,7 @@ const initializeApp = async () => {
       max: 100
     }));
 
-    // 4. Database connections with connection testing
+    // 4. Conexões com banco de dados com teste de conexão
     const { Pool } = require('pg');
     const Redis = require('ioredis');
 
@@ -84,19 +82,23 @@ const initializeApp = async () => {
 
     const redis = new Redis(process.env.REDIS_URL);
 
-    // Test connections with timeout
+    // Testa conexões com timeout
     await Promise.all([
-      dbPool.query('SELECT 1').catch(e => { throw new Error(`PostgreSQL connection failed: ${e.message}`); }),
-      redis.ping().catch(e => { throw new Error(`Redis connection failed: ${e.message}`); })
+      dbPool.query('SELECT 1').catch(e => { 
+        throw new Error(`Falha na conexão PostgreSQL: ${e.message}`); 
+      }),
+      redis.ping().catch(e => { 
+        throw new Error(`Falha na conexão Redis: ${e.message}`); 
+      })
     ]);
     console.log('✅ Conexões com banco de dados estabelecidas');
 
-    // 5. Routes with explicit error handling
+    // 5. Rotas com tratamento de erro explícito
     const apiRoutes = require('./routes/apiRoutes');
     app.use('/api', apiRoutes);
     console.log('✅ Rotas configuradas com sucesso');
 
-    // 6. Server startup
+    // 6. Inicialização do servidor
     const PORT = process.env.PORT || 3000;
     const server = app.listen(PORT, () => {
       console.log(`🚀 Servidor rodando na porta ${PORT}`);
@@ -110,7 +112,7 @@ const initializeApp = async () => {
   }
 };
 
-// Startup with proper error handling
+// Inicialização com tratamento de erro adequado
 initializeApp()
   .then(server => {
     const shutdown = async (signal) => {
@@ -128,13 +130,13 @@ initializeApp()
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
 
-    // Unhandled rejection/exception handlers
+    // Handlers para rejeições não tratadas e exceções
     process.on('unhandledRejection', (reason) => {
-      console.error('Unhandled Rejection at:', reason);
+      console.error('Rejeição não tratada:', reason);
     });
 
     process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
+      console.error('Exceção não capturada:', error);
       shutdown('uncaughtException');
     });
   })
