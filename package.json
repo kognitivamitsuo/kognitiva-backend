@@ -98,7 +98,7 @@
     "@root": ".",
     "@config": "src/config",
     "@controllers": "src/controllers",
-    "@services": "src/services",  // Correção aplicada
+    "@services": "src/services",
     "@routes": "src/routes",
     "@middleware": "src/middleware",
     "@models": "src/models",
@@ -134,4 +134,5 @@
     "npm": "9.8.1"
   }
 }
+
 
