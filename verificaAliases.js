@@ -3,81 +3,147 @@
 
 const fs = require('fs');
 const path = require('path');
-const colors = require('colors'); // Added for better console output
+const colors = require('colors');
 
-// Configurable settings
-const EXIT_ON_ERROR = true;
-const SHOW_SUCCESS = true;
-
-// Enhanced logging functions
-const log = {
-  success: (msg) => console.log(colors.green(`✓ ${msg}`)),
-  error: (msg) => console.error(colors.red(`✗ ${msg}`)),
-  info: (msg) => console.log(colors.cyan(`ℹ ${msg}`)),
-  warning: (msg) => console.log(colors.yellow(`⚠ ${msg}`))
+// Configuration
+const CONFIG = {
+  EXIT_ON_ERROR: true,
+  SHOW_SUCCESS: true,
+  VERBOSE: true,
+  CHECK_FILE_TYPES: {
+    '@controllers': 'directory',
+    '@services': 'directory',
+    '@models': 'directory',
+    '@utils': 'mixed',
+    '@config': 'directory'
+  }
 };
 
-log.info('🔍 Starting path verification for module aliases...');
+// Enhanced logging
+const logger = {
+  success: (msg) => console.log(colors.green(`✓ ${msg}`)),
+  error: (msg) => console.error(colors.red(`✗ ${msg}`)),
+  info: (msg) => CONFIG.VERBOSE && console.log(colors.cyan(`ℹ ${msg}`)),
+  warn: (msg) => console.log(colors.yellow(`⚠ ${msg}`)),
+  debug: (msg) => CONFIG.VERBOSE && console.log(colors.gray(`⌛ ${msg}`))
+};
 
-try {
-  // Load package.json with error handling
-  const packageJsonPath = path.resolve(__dirname, './package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    throw new Error('package.json not found');
-  }
+logger.info('🔍 Starting comprehensive path verification...');
 
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-  const aliases = packageJson._moduleAliases || {};
-
-  if (Object.keys(aliases).length === 0) {
-    log.warning('No aliases found in _moduleAliases');
-    process.exit(EXIT_ON_ERROR ? 1 : 0);
-  }
-
-  log.info(`Found ${Object.keys(aliases).length} aliases to verify:`);
-
-  let errorCount = 0;
-  const aliasReport = [];
-
-  // Verify each alias
-  Object.entries(aliases).forEach(([alias, dir]) => {
-    const resolvedPath = path.resolve(__dirname, dir);
+// Critical path verification
+const verifyProjectStructure = () => {
+  try {
+    // 1. Verify package.json exists
+    const packageJsonPath = path.resolve(__dirname, '..', 'package.json');
+    logger.debug(`Checking package.json at: ${packageJsonPath}`);
     
-    try {
-      if (!fs.existsSync(resolvedPath)) {
-        throw new Error(`Path not found: ${resolvedPath}`);
-      }
-
-      // Additional check if it's a directory when expected
-      if (alias !== '@root' && !fs.statSync(resolvedPath).isDirectory()) {
-        throw new Error('Expected a directory but found a file');
-      }
-
-      aliasReport.push({ alias, status: 'OK', path: resolvedPath });
-      if (SHOW_SUCCESS) {
-        log.success(`${alias.padEnd(15)} → ${dir}`);
-      }
-    } catch (err) {
-      errorCount++;
-      aliasReport.push({ alias, status: 'ERROR', path: resolvedPath, error: err.message });
-      log.error(`${alias.padEnd(15)} → ${dir} (${err.message})`);
+    if (!fs.existsSync(packageJsonPath)) {
+      throw new Error('package.json not found at project root');
     }
-  });
 
-  // Generate summary report
-  log.info('\n📊 Verification Summary:');
-  console.table(aliasReport);
+    // 2. Load and parse package.json
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    const aliases = packageJson._moduleAliases || {};
+    logger.info(`Discovered ${Object.keys(aliases).length} module aliases`);
 
-  if (errorCount > 0) {
-    log.error(`⛔ Found ${errorCount} errors in aliases configuration`);
-    if (EXIT_ON_ERROR) {
-      process.exit(1);
+    if (Object.keys(aliases).length === 0) {
+      logger.warn('No aliases configured in _moduleAliases');
+      return { valid: false, errors: ['No aliases configured'] };
     }
-  } else {
-    log.success('🎯 All aliases are correctly configured!');
+
+    // 3. Verify each alias
+    let errorCount = 0;
+    const results = [];
+
+    Object.entries(aliases).forEach(([alias, relativePath]) => {
+      const absolutePath = path.resolve(__dirname, '..', relativePath);
+      const expectedType = CONFIG.CHECK_FILE_TYPES[alias] || 'mixed';
+      const result = { alias, path: relativePath, status: 'OK' };
+
+      try {
+        // Existence check
+        if (!fs.existsSync(absolutePath)) {
+          throw new Error(`Path does not exist`);
+        }
+
+        // Type checking
+        const stats = fs.statSync(absolutePath);
+        if (expectedType === 'directory' && !stats.isDirectory()) {
+          throw new Error(`Expected directory but found file`);
+        }
+        if (expectedType === 'file' && !stats.isFile()) {
+          throw new Error(`Expected file but found directory`);
+        }
+
+        // Additional content checks for critical directories
+        if (alias === '@config' && stats.isDirectory()) {
+          const files = fs.readdirSync(absolutePath);
+          if (!files.includes('index.js') && !files.includes('index.ts')) {
+            logger.warn(`Config directory missing index file`);
+          }
+        }
+
+        if (CONFIG.SHOW_SUCCESS) {
+          logger.success(`${alias.padEnd(12)} → ${relativePath}`);
+        }
+      } catch (err) {
+        errorCount++;
+        result.status = 'ERROR';
+        result.error = err.message;
+        logger.error(`${alias.padEnd(12)} → ${relativePath} (${err.message})`);
+      }
+
+      results.push(result);
+    });
+
+    // 4. Verify critical files
+    const criticalFiles = [
+      'src/services/iaService.js',
+      'src/config/index.js',
+      'src/app.js'
+    ];
+
+    criticalFiles.forEach(filePath => {
+      const absPath = path.resolve(__dirname, '..', filePath);
+      if (!fs.existsSync(absPath)) {
+        errorCount++;
+        logger.error(`Critical file missing: ${filePath}`);
+      }
+    });
+
+    return {
+      valid: errorCount === 0,
+      errorCount,
+      results,
+      aliases
+    };
+
+  } catch (error) {
+    logger.error(`Verification failed: ${error.message}`);
+    return {
+      valid: false,
+      error: error.message
+    };
   }
+};
 
-} catch (mainError) {
-  log.error(`Critical error during verification: ${mainError.message}`);
-  process.exit(1);
+// Main execution
+const { valid, errorCount, results } = verifyProjectStructure();
+
+// Report generation
+logger.info('\n📊 Verification Report:');
+console.table(results);
+
+if (!valid) {
+  logger.error(`⛔ Verification failed with ${errorCount} error(s)`);
+  if (CONFIG.EXIT_ON_ERROR) {
+    process.exit(1);
+  }
+} else {
+  logger.success('✅ All paths and aliases are correctly configured!');
+}
+
+// Export for testing purposes
+if (process.env.NODE_ENV === 'test') {
+  module.exports = { verifyProjectStructure };
 }
