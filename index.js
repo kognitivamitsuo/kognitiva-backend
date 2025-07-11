@@ -63,7 +63,7 @@ const initializeApp = async () => {
     // 2. Módulos críticos com carregamento aprimorado
     const criticalModules = [
       './src/services/aiService',  // Caminho corrigido para o aiService.js
-      './config/database',
+      './models/db.js',  // Caminho corrigido para o db.js
       './middleware/auth'
     ];
 
