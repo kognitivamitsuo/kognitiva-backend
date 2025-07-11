@@ -1,12 +1,13 @@
 {
   "name": "kognitiva-backend",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "NODE_OPTIONS='--experimental-specifier-resolution=node' node src/index.js",
     "build": "npm install",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
   },
   "dependencies": {
     "express": "^5.0.0",
@@ -18,9 +19,19 @@
     "helmet": "^7.1.0",
     "express-rate-limit": "^6.8.1",
     "rate-limit-redis": "^3.0.0",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "http-status-codes": "^2.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "jest": {
+    "transform": {},
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [".js"]
   }
 }
