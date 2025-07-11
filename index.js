@@ -1,108 +1,144 @@
 'use strict';
 
-// Remover configuração de aliases, já que não será mais utilizado.
+const path = require('path');
+const fs = require('fs');
+
+// Improved alias setup with verification
 const setupAliases = () => {
-  // Não é mais necessário configurar aliases com module-alias ou require-alias
   console.log('✅ Não há necessidade de configuração de aliases.');
   return true;
 };
 
-// Inicialização segura
-const initializeApp = async () => {
-  // 1. Não há mais necessidade de configurar aliases
-  if (!setupAliases()) {
-    process.exit(1);
-  }
-
-  // 2. Verificação de módulos críticos
-  const criticalModules = [
-    './services/iaService',  // Caminho relativo
-    './config/database',     // Caminho relativo
-    './middleware/auth'      // Caminho relativo
-  ];
-
-  for (const module of criticalModules) {
-    try {
-      require(module);  // Carregamento dos módulos críticos com caminho relativo
-      console.log(`✅ Módulo crítico carregado: ${module}`);
-    } catch (error) {
-      console.error(`❌ Falha ao carregar módulo crítico ${module}:`, error);
-      process.exit(1);
-    }
-  }
-
-  // 3. Configuração do Express com verificações adicionais
-  const express = require('express');
-  const app = express();
-
-  // Middlewares essenciais com verificações
+// Enhanced module loader with path verification
+const loadCriticalModule = (modulePath) => {
   try {
-    app.use(require('helmet')());
-    app.use(require('cors')({
+    // Verify file exists before requiring
+    const fullPath = path.resolve(__dirname, modulePath);
+    
+    // Check for .js, .cjs, or directory with index.js
+    if (!fs.existsSync(fullPath) {
+      const jsPath = `${fullPath}.js`;
+      const indexPath = path.join(fullPath, 'index.js');
+      
+      if (fs.existsSync(jsPath)) {
+        return require(jsPath);
+      } else if (fs.existsSync(indexPath)) {
+        return require(indexPath);
+      }
+      throw new Error(`Module not found at ${fullPath}`);
+    }
+    
+    return require(fullPath);
+  } catch (error) {
+    console.error(`❌ Falha ao carregar módulo crítico ${modulePath}:`, error);
+    throw error; // Re-throw for outer handling
+  }
+};
+
+const initializeApp = async () => {
+  try {
+    // 1. Alias setup
+    if (!setupAliases()) {
+      throw new Error('Alias configuration failed');
+    }
+
+    // 2. Critical modules with enhanced loading
+    const criticalModules = [
+      './services/iaService',
+      './config/database',
+      './middleware/auth'
+    ];
+
+    for (const module of criticalModules) {
+      loadCriticalModule(module);
+      console.log(`✅ Módulo crítico carregado: ${module}`);
+    }
+
+    // 3. Express setup with dependency verification
+    const express = require('express');
+    const app = express();
+
+    // Essential middleware with individual error handling
+    const helmet = require('helmet');
+    const cors = require('cors');
+    const rateLimit = require('express-rate-limit');
+
+    app.use(helmet());
+    app.use(cors({
       origin: process.env.CORS_ORIGIN || '*',
       methods: ['GET', 'POST', 'PUT', 'DELETE']
     }));
-    app.use(require('express-rate-limit')({
+    app.use(rateLimit({
       windowMs: 15 * 60 * 1000,
       max: 100
     }));
-  } catch (middlewareError) {
-    console.error('❌ Falha ao configurar middlewares:', middlewareError);
-    process.exit(1);
-  }
 
-  // 4. Conexões com banco de dados
-  const { Pool } = require('pg');
-  const Redis = require('ioredis');
+    // 4. Database connections with connection testing
+    const { Pool } = require('pg');
+    const Redis = require('ioredis');
 
-  const dbPool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-  });
+    const dbPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
 
-  const redis = new Redis(process.env.REDIS_URL);
+    const redis = new Redis(process.env.REDIS_URL);
 
-  // Teste de conexões imediato
-  try {
-    await dbPool.query('SELECT 1');
-    await redis.ping();
+    // Test connections with timeout
+    await Promise.all([
+      dbPool.query('SELECT 1').catch(e => { throw new Error(`PostgreSQL connection failed: ${e.message}`); }),
+      redis.ping().catch(e => { throw new Error(`Redis connection failed: ${e.message}`); })
+    ]);
     console.log('✅ Conexões com banco de dados estabelecidas');
-  } catch (dbError) {
-    console.error('❌ Falha nas conexões com banco de dados:', dbError);
-    process.exit(1);
-  }
 
-  // 5. Configuração de rotas com verificação
-  try {
-    app.use('/api', require('./routes/apiRoutes'));  // Caminho relativo
+    // 5. Routes with explicit error handling
+    const apiRoutes = require('./routes/apiRoutes');
+    app.use('/api', apiRoutes);
     console.log('✅ Rotas configuradas com sucesso');
-  } catch (routesError) {
-    console.error('❌ Falha ao configurar rotas:', routesError);
+
+    // 6. Server startup
+    const PORT = process.env.PORT || 3000;
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 Servidor rodando na porta ${PORT}`);
+      console.log(`🔍 Health Check: http://localhost:${PORT}/health`);
+    });
+
+    return server;
+  } catch (error) {
+    console.error('💥 Falha crítica na inicialização:', error);
     process.exit(1);
   }
-
-  // 6. Inicialização do servidor
-  const PORT = process.env.PORT || 3000;
-  return app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
-    console.log(`🔍 Health Check: http://localhost:${PORT}/health`);
-  });
 };
 
-// Execução controlada com tratamento de erros
+// Startup with proper error handling
 initializeApp()
   .then(server => {
-    // Graceful shutdown
-    const shutdown = async () => {
-      console.log('🛑 Encerrando servidor...');
-      await server.close();
-      process.exit(0);
+    const shutdown = async (signal) => {
+      console.log(`🛑 Recebido ${signal}, encerrando servidor...`);
+      try {
+        await server.close();
+        console.log('Servidor encerrado com sucesso');
+        process.exit(0);
+      } catch (err) {
+        console.error('Erro ao encerrar servidor:', err);
+        process.exit(1);
+      }
     };
 
-    process.on('SIGTERM', shutdown);
-    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+
+    // Unhandled rejection/exception handlers
+    process.on('unhandledRejection', (reason) => {
+      console.error('Unhandled Rejection at:', reason);
+    });
+
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+      shutdown('uncaughtException');
+    });
   })
   .catch(error => {
-    console.error('💥 Falha crítica na inicialização:', error);
+    console.error('💥 Falha na inicialização:', error);
     process.exit(1);
   });
