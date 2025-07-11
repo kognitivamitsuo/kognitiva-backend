@@ -1,5 +1,11 @@
-const FeedbackAgent = require('../agents/FeedbackAgent');
+'use strict';
 
+// Remova qualquer uso de alias e substitua por caminhos relativos
+const FeedbackAgent = require('../agents/FeedbackAgent');  // Caminho relativo
+
+/**
+ * Envia o feedback do usuário
+ */
 async function enviarFeedback(req, res) {
   try {
     const { feedback, comentario } = req.body;
