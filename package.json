@@ -4,9 +4,9 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node --no-warnings src/index.js",
+    "start": "node --experimental-vm-modules src/index.js",
     "build": "npm install",
-    "dev": "nodemon src/index.js --experimental-specifier-resolution=node"
+    "dev": "nodemon --experimental-vm-modules src/index.js"
   },
   "dependencies": {
     "express": "^5.0.0",
@@ -14,8 +14,7 @@
     "pg": "^8.11.3",
     "jsonwebtoken": "^9.0.2",
     "dotenv-safe": "^8.2.0",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0"
+    "cors": "^2.8.5"
   },
   "engines": {
     "node": ">=18.0.0"
