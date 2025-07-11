@@ -1,11 +1,11 @@
-// src/controllers/iaController.js
+'use strict';
 
-// Importações corrigidas usando os aliases configurados no `package.json`
-const { gerarRespostaIA } = require('@services/iaService');  // Usando o alias '@services'
-const { salvarLogExecucao } = require('@services/logger');   // Usando o alias '@services'
-const { salvarFeedback } = require('@services/feedbackService');  // Usando o alias '@services'
-const { gerarDiagnosticoFinal } = require('@services/diagnosticService');  // Usando o alias '@services'
-const { atualizarContexto } = require('@services/contextService');  // Usando o alias '@services'
+// Remover qualquer uso de alias e substituir por caminhos relativos
+const { gerarRespostaIA } = require('../services/iaService');  // Caminho relativo
+const { salvarLogExecucao } = require('../services/logger');   // Caminho relativo
+const { salvarFeedback } = require('../services/feedbackService');  // Caminho relativo
+const { gerarDiagnosticoFinal } = require('../services/diagnosticService');  // Caminho relativo
+const { atualizarContexto } = require('../services/contextService');  // Caminho relativo
 
 const executarIA = async (req, res) => {
   try {
@@ -67,3 +67,4 @@ module.exports = {
   receberFeedback,
   gerarDiagnostico
 };
+
