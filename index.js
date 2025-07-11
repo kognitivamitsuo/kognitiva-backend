@@ -1,129 +1,228 @@
-{
-  "name": "kognitiva",
-  "version": "1.2.0",
-  "description": "Plataforma Kognitiva - API Inteligente",
-  "main": "index.js",
-  "scripts": {
-    "start": "NODE_ENV=production node --no-warnings -r module-alias/register index.js",
-    "dev": "nodemon --inspect -r module-alias/register index.js",
-    "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles --runInBand",
-    "test:ci": "cross-env NODE_ENV=test jest --ci --runInBand --coverage",
-    "verify:paths": "node ./scripts/verifyPaths.js",
-    "prestart": "npm run verify:paths",
-    "docker:build": "docker build -t kognitiva-api .",
-    "docker:run": "docker run -p 3000:3000 -e NODE_ENV=production kognitiva-api",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint --fix . --ext .js,.jsx,.ts,.tsx",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
-    "prepare": "husky install",
-    "healthcheck": "curl -fs http://localhost:$PORT/health || exit 1"
-  },
-  "dependencies": {
-    "@hapi/joi": "^17.1.1",
-    "axios": "^1.6.2",
-    "bcryptjs": "^2.4.3",
-    "compression": "^1.7.4",
-    "cors": "^2.8.5",
-    "csurf": "^1.11.0",
-    "dotenv": "^16.3.1",
-    "express": "^4.19.2",
-    "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^6.8.1",
-    "helmet": "^7.1.0",
-    "http-status-codes": "^2.2.0",
-    "ioredis": "^5.3.2",
-    "jsonwebtoken": "^9.0.2",
-    "knex": "^2.5.1",
-    "module-alias": "^2.2.3",
-    "pg": "^8.11.3",
-    "pino": "^8.16.0",
-    "pino-pretty": "^10.2.3",
-    "swagger-ui-express": "^5.0.0"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3",
-    "eslint": "^8.56.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-jest": "^27.6.0",
-    "eslint-plugin-prettier": "^5.0.1",
-    "husky": "^8.0.3",
-    "jest": "^29.7.0",
-    "jest-environment-node": "^29.7.0",
-    "jest-mock-extended": "^3.0.5",
-    "nodemon": "^3.0.2",
-    "prettier": "^3.1.0",
-    "supertest": "^6.3.3",
-    "testcontainers": "^10.4.0"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^@root/(.*)$": "<rootDir>/$1",
-      "^@config/(.*)$": "<rootDir>/src/config/$1",
-      "^@controllers/(.*)$": "<rootDir>/src/controllers/$1",
-      "^@services/(.*)$": "<rootDir>/src/services/$1",
-      "^@routes/(.*)$": "<rootDir>/src/routes/$1",
-      "^@middleware/(.*)$": "<rootDir>/src/middleware/$1",
-      "^@models/(.*)$": "<rootDir>/src/models/$1",
-      "^@utils/(.*)$": "<rootDir>/utils/$1",
-      "^@agents/(.*)$": "<rootDir>/src/agents/$1"
-    },
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "./jest.setup.js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/tests/",
-      "/src/config/",
-      "/src/middleware/"
-    ],
-    "testTimeout": 30000
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0",
-    "bun": ">=1.0.0"
-  },
-  "_moduleAliases": {
-    "@root": ".",
-    "@config": "./src/config",
-    "@controllers": "./src/controllers",
-    "@services": "./src/services",
-    "@routes": "./src/routes",
-    "@middleware": "./src/middleware",
-    "@models": "./src/models",
-    "@utils": "./utils",
-    "@agents": "./src/agents"
-  },
-  "files": [
-    "dist/",
-    "src/",
-    "index.js",
-    "knexfile.js",
-    "scripts/"
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/kognitivamitsuo/kognitiva-backend.git"
-  },
-  "bugs": {
-    "url": "https://github.com/kognitivamitsuo/kognitiva-backend/issues"
-  },
-  "homepage": "https://github.com/kognitivamitsuo/kognitiva-backend#readme",
-  "keywords": [
-    "AI",
-    "chatbot",
-    "nodejs",
-    "postgresql",
-    "redis",
-    "api",
-    "backend"
-  ],
-  "volta": {
-    "node": "18.18.2",
-    "npm": "9.8.1"
-  }
+'use strict';
+
+// Configuração de aliases deve ser a PRIMEIRA coisa no arquivo
+require('module-alias/register');
+const path = require('path');
+const moduleAlias = require('module-alias');
+
+// Configuração robusta de aliases com verificação
+try {
+  moduleAlias.addAliases({
+    '@root': __dirname,
+    '@config': path.join(__dirname, 'src', 'config'),
+    '@controllers': path.join(__dirname, 'src', 'controllers'),
+    '@services': path.join(__dirname, 'src', 'services'),
+    '@routes': path.join(__dirname, 'src', 'routes'),
+    '@middleware': path.join(__dirname, 'src', 'middleware'),
+    '@models': path.join(__dirname, 'src', 'models'),
+    '@utils': path.join(__dirname, 'utils'),
+    '@agents': path.join(__dirname, 'src', 'agents')
+  });
+  
+  // Verificação imediata dos aliases
+  console.log('✅ Aliases configurados:', moduleAlias.getAliases());
+} catch (error) {
+  console.error('❌ Falha ao configurar aliases:', error);
+  process.exit(1);
 }
+
+// Verificação de módulo crítico
+try {
+  require('@services/iaService');
+  console.log('✅ Módulo @services/iaService carregado com sucesso');
+} catch (error) {
+  console.error('❌ Falha ao carregar módulo crítico:', error);
+  process.exit(1);
+}
+
+// Importações principais
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const { Pool } = require('pg');
+const Redis = require('ioredis');
+const pino = require('pino');
+const apiRoutes = require('@routes/apiRoutes');
+
+// Configuração do logger
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  transport: {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:dd-mm-yyyy HH:MM:ss',
+      ignore: 'pid,hostname'
+    }
+  }
+});
+
+// Inicialização do Express
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Verificação de variáveis de ambiente
+const requiredEnvVars = ['DATABASE_URL', 'REDIS_URL', 'JWT_SECRET'];
+requiredEnvVars.forEach(env => {
+  if (!process.env[env]) {
+    logger.fatal(`Variável de ambiente necessária faltando: ${env}`);
+    process.exit(1);
+  }
+});
+
+logger.info(`Iniciando Kognitiva Backend (v${require('./package.json').version})`);
+logger.info(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+logger.info(`Porta: ${PORT}`);
+
+// Middlewares avançados
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:']
+    }
+  },
+  hsts: {
+    maxAge: 63072000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+app.use(cors({
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Conexão com PostgreSQL (com pooling avançado)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { 
+    rejectUnauthorized: false,
+    ca: process.env.DB_SSL_CA 
+  } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  allowExitOnIdle: true
+});
+
+pool.on('error', err => {
+  logger.error('Erro inesperado no pool do PostgreSQL:', err);
+});
+
+// Conexão com Redis (com reconexão automática)
+const redis = new Redis(process.env.REDIS_URL, {
+  retryStrategy: times => Math.min(times * 100, 5000),
+  reconnectOnError: err => {
+    logger.warn('Erro no Redis, tentando reconectar:', err.message);
+    return true;
+  }
+});
+
+redis.on('connect', () => logger.info('Conectado ao Redis'));
+redis.on('error', err => logger.error('Erro no Redis:', err));
+
+// Health Check aprimorado
+const healthCheck = async () => {
+  const checks = {
+    database: false,
+    redis: false,
+    memoryUsage: process.memoryUsage().rss / 1024 / 1024 < 500 // Menos de 500MB
+  };
+
+  try {
+    await pool.query('SELECT 1');
+    checks.database = true;
+  } catch (err) {
+    logger.error('Health Check: Falha no PostgreSQL', err);
+  }
+
+  try {
+    await redis.ping();
+    checks.redis = true;
+  } catch (err) {
+    logger.error('Health Check: Falha no Redis', err);
+  }
+
+  return checks;
+};
+
+// Rotas
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    version: require('./package.json').version,
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+app.get('/health', async (req, res) => {
+  const checks = await healthCheck();
+  const isHealthy = Object.values(checks).every(Boolean);
+  
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'healthy' : 'degraded',
+    checks,
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Rotas da API
+app.use('/api', apiRoutes);
+
+// Tratamento de erros centralizado
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  
+  const statusCode = err.statusCode || 500;
+  const message = statusCode === 500 ? 'Internal Server Error' : err.message;
+  
+  res.status(statusCode).json({
+    error: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// Graceful shutdown
+const shutdown = async (signal) => {
+  logger.info(`Recebido ${signal}, encerrando servidor...`);
+  
+  try {
+    await pool.end();
+    await redis.quit();
+    server.close(() => {
+      logger.info('Servidor encerrado com sucesso');
+      process.exit(0);
+    });
+  } catch (err) {
+    logger.error('Erro durante o shutdown:', err);
+    process.exit(1);
+  }
+};
+
+// Inicialização segura
+const server = app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`Servidor rodando na porta ${PORT}`);
+  logger.info(`Modo: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Health Check: http://localhost:${PORT}/health`);
+});
+
+// Manipuladores de sinais para graceful shutdown
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('unhandledRejection', err => {
+  logger.error('Unhandled Rejection:', err);
+});
+process.on('uncaughtException', err => {
+  logger.error('Uncaught Exception:', err);
+  shutdown('uncaughtException');
+});
