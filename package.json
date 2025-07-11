@@ -1,32 +1,22 @@
 {
   "name": "kognitiva",
-  "version": "1.1.8",
+  "version": "1.2.0",
   "description": "Plataforma Kognitiva - API Inteligente",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV=production node -r module-alias/register index.js",
-    "start:prod": "npm run build && npm run start",
-    "dev": "nodemon -r module-alias/register index.js",
-    "build": "npm run lint && npm run test",
-    "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles",
-    "test:unit": "cross-env NODE_ENV=test jest --runInBand --testPathPattern=unit",
-    "test:integration": "cross-env NODE_ENV=test jest --runInBand --testPathPattern=integration",
+    "start": "NODE_ENV=production node --no-warnings -r module-alias/register index.js",
+    "dev": "nodemon --inspect -r module-alias/register index.js",
+    "test": "cross-env NODE_ENV=test jest --watchAll --detectOpenHandles --runInBand",
     "test:ci": "cross-env NODE_ENV=test jest --ci --runInBand --coverage",
-    "test:e2e": "cross-env NODE_ENV=test jest --runInBand --testPathPattern=e2e",
-    "migrate": "knex migrate:latest",
-    "migrate:rollback": "knex migrate:rollback",
-    "migrate:make": "knex migrate:make",
-    "db:seed": "knex seed:run",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "verify:aliases": "node -e \"require('module-alias/register'); console.log('✅ Aliases configurados corretamente')\"",
-    "prepare": "husky install",
+    "verify:paths": "node ./scripts/verifyPaths.js",
+    "prestart": "npm run verify:paths",
     "docker:build": "docker build -t kognitiva-api .",
     "docker:run": "docker run -p 3000:3000 -e NODE_ENV=production kognitiva-api",
-    "healthcheck": "curl -f http://localhost:$PORT/health || exit 1",
-    "audit:fix": "npm audit fix",
-    "prestart": "npm run verify:aliases"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint --fix . --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "prepare": "husky install",
+    "healthcheck": "curl -fs http://localhost:$PORT/health || exit 1"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
@@ -47,7 +37,8 @@
     "module-alias": "^2.2.3",
     "pg": "^8.11.3",
     "pino": "^8.16.0",
-    "pino-pretty": "^10.2.3"
+    "pino-pretty": "^10.2.3",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
@@ -79,13 +70,16 @@
       "^@agents/(.*)$": "<rootDir>/src/agents/$1"
     },
     "testEnvironment": "node",
-    "setupFilesAfterEnv": ["./jest.setup.js"],
+    "setupFilesAfterEnv": [
+      "./jest.setup.js"
+    ],
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/tests/",
       "/src/config/",
       "/src/middleware/"
-    ]
+    ],
+    "testTimeout": 30000
   },
   "engines": {
     "node": ">=18.0.0",
@@ -93,7 +87,7 @@
     "bun": ">=1.0.0"
   },
   "_moduleAliases": {
-    "@root": "./",
+    "@root": ".",
     "@config": "./src/config",
     "@controllers": "./src/controllers",
     "@services": "./src/services",
@@ -107,7 +101,8 @@
     "dist/",
     "src/",
     "index.js",
-    "knexfile.js"
+    "knexfile.js",
+    "scripts/"
   ],
   "license": "MIT",
   "repository": {
