@@ -1,6 +1,7 @@
-// controllers/diagnosticoController.js
+'use strict';
 
-const MonitoringAgent = require('../src/agents/MonitoringAgent');
+// Remova qualquer uso de alias e substitua por caminhos relativos
+const MonitoringAgent = require('../agents/MonitoringAgent');  // Caminho relativo
 const agent = new MonitoringAgent();
 
 /**
