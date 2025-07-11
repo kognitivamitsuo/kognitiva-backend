@@ -1,6 +1,7 @@
-// controllers/contextoController.js
+'use strict';
 
-const ContextManagementAgent = require('../src/agents/ContextManagementAgent');
+// Remova qualquer uso de alias e substitua por caminhos relativos
+const ContextManagementAgent = require('../agents/ContextManagementAgent');  // Caminho relativo
 const agent = new ContextManagementAgent();
 
 /**
