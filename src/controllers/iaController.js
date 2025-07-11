@@ -1,10 +1,11 @@
 // src/controllers/iaController.js
 
-const { gerarRespostaIA } = require('../services/iaService');  // Caminho corrigido para '../services/iaService'
-const { salvarLogExecucao } = require('../services/logger');   // Caminho corrigido
-const { salvarFeedback } = require('../services/feedbackService');  // Caminho corrigido
-const { gerarDiagnosticoFinal } = require('../services/diagnosticService');  // Caminho corrigido
-const { atualizarContexto } = require('../services/contextService');  // Caminho corrigido
+// Importações corrigidas usando os aliases configurados no `package.json`
+const { gerarRespostaIA } = require('@services/iaService');  // Usando o alias '@services'
+const { salvarLogExecucao } = require('@services/logger');   // Usando o alias '@services'
+const { salvarFeedback } = require('@services/feedbackService');  // Usando o alias '@services'
+const { gerarDiagnosticoFinal } = require('@services/diagnosticService');  // Usando o alias '@services'
+const { atualizarContexto } = require('@services/contextService');  // Usando o alias '@services'
 
 const executarIA = async (req, res) => {
   try {
