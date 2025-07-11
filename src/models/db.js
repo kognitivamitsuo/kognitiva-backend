@@ -2,6 +2,7 @@
 
 // Importação de Pool do pg para criar a conexão com o PostgreSQL
 const { Pool } = require('pg');  
+
 // Ajuste do caminho para o arquivo de configuração
 const { databaseUrl } = require('../config/config');  // Caminho relativo para o arquivo de configuração
 
