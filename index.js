@@ -12,7 +12,7 @@ const authMiddleware = require("./middleware/authMiddleware");
 
 // Rotas cognitivas
 const apiRoutes = require("./routes/apiRoutes");
-const syncUrlRoutes = require("./routes/syncUrl");
+const syncUrl = require("./routes/syncUrl");
 
 const PORT = process.env.PORT || 3000;
 
@@ -24,7 +24,7 @@ app.use(authMiddleware);    // JWT obrigatório em todas as rotas abaixo
 
 // Rotas principais
 app.use("/", apiRoutes);                          // Rotas: /executar, /proxy/contexto, /proxy/token, etc.
-app.use("/proxy/cache_superprompt", syncUrlRoutes); // Rota auxiliar para cache de prompts
+app.use("/proxy/cache_superprompt", syncUrl); // Rota auxiliar para cache de prompts
 
 // Tratamento de erros globais
 app.use((err, req, res, next) => {
