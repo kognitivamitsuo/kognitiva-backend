@@ -6,31 +6,34 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
+// Middlewares de segurança e rastreabilidade
 const inputFilter = require("./utils/inputFilter");
 const authMiddleware = require("./middleware/authMiddleware");
+
+// Rotas cognitivas
 const apiRoutes = require("./routes/apiRoutes");
 const syncUrlRoutes = require("./routes/syncUrl");
 
 const PORT = process.env.PORT || 3000;
 
+// Middlewares globais
 app.use(cors());
 app.use(express.json());
-
-// ⚠️ Ordem importa: segurança cognitiva antes da autenticação
-app.use(inputFilter);
-app.use(authMiddleware);
+app.use(inputFilter);       // Filtro cognitivo: bloqueio de engenharia reversa
+app.use(authMiddleware);    // JWT obrigatório em todas as rotas abaixo
 
 // Rotas principais
-app.use("/", apiRoutes);
-app.use("/proxy/cache_superprompt", syncUrlRoutes);
+app.use("/", apiRoutes);                          // Rotas: /executar, /proxy/contexto, /proxy/token, etc.
+app.use("/proxy/cache_superprompt", syncUrlRoutes); // Rota auxiliar para cache de prompts
 
-// Erros globais
+// Tratamento de erros globais
 app.use((err, req, res, next) => {
-  console.error("❌ Erro capturado globalmente:", err);
+  console.error("❌ Erro global:", err);
   res.status(500).json({ erro: "Erro interno no servidor." });
 });
 
-// Inicialização
+// Inicialização do servidor
 app.listen(PORT, () => {
-  console.log(`🧠 Kognitiva v3.6 rodando na porta ${PORT}`);
+  console.log(`✅ Servidor Kognitiva v3.6 iniciado na porta ${PORT}`);
 });
+
