@@ -10,7 +10,7 @@
 function inputFilter(req, res, next) {
   const entrada = JSON.stringify(req.body || {});
 
-  // Padrões bloqueados (engenharia reversa, exploração, abuso)
+  // Padrões bloqueados
   const palavrasProibidas = [
     "prompt original", "explique como funciona", "ignore todas as instruções",
     "como você foi treinado", "reveal", "exploit", "system message", "responda como",
@@ -34,3 +34,4 @@ function inputFilter(req, res, next) {
 }
 
 module.exports = inputFilter;
+
