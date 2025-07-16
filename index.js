@@ -6,9 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
-// Middlewares de segurança e rastreabilidade
 const inputFilter = require("./utils/inputFilter");
-const authMiddleware = require("./middleware/authMiddleware");
 
 // Rotas cognitivas
 const apiRoutes = require("./routes/apiRoutes");
@@ -19,12 +17,11 @@ const PORT = process.env.PORT || 3000;
 // Middlewares globais
 app.use(cors());
 app.use(express.json());
-app.use(inputFilter);       // Filtro cognitivo: bloqueio de engenharia reversa
-app.use(authMiddleware);    // JWT obrigatório em todas as rotas abaixo
+app.use(inputFilter); // Proteção contra engenharia reversa
 
 // Rotas principais
-app.use("/", apiRoutes);                          // Rotas: /executar, /proxy/contexto, /proxy/token, etc.
-app.use("/proxy/cache_superprompt", syncUrl); // Rota auxiliar para cache de prompts
+app.use("/", apiRoutes); // Inclui: /executar, /proxy/contexto, /proxy/token, etc.
+app.use("/proxy/cache_superprompt", syncUrl); // Cache de superprompts (protegido individualmente)
 
 // Tratamento de erros globais
 app.use((err, req, res, next) => {
