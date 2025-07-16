@@ -33,6 +33,7 @@ async function enviarContexto() {
     perfil_cliente_inferido: "curioso",
     origem_inferencia: "simulacao_debug",
     contexto_score: 100,
+    confirmado_usuario: true
   };
 
   console.debug("📨 Payload de contexto:", payload);
@@ -88,7 +89,7 @@ async function enviarFeedback(score = 9) {
     token_sessao: TOKEN_SESSAO,
     score_resposta: score,
     comentario_usuario: "Resposta muito útil",
-    contexto_score: 100,
+    contexto_score: 100
   };
 
   console.debug("📨 Payload de feedback:", payload);
@@ -137,11 +138,10 @@ async function gerarDiagnostico(score = 9) {
   await enviarContexto();
 
   const execucao = await executarIA();
-  const score = execucao?.diagnostico_gerado?.score_resposta || 9;
+  const score = execucao?.score_resposta || 9;
 
   await enviarFeedback(score);
   await gerarDiagnostico(score);
 
   console.log("🏁 Simulação finalizada com sucesso.");
 })();
-
