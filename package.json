@@ -7,7 +7,8 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "node tests/simulacoes.js",
-    "build": "echo '✅ Nenhuma etapa de build necessária para o backend Kognitiva v3.6.'"
+    "build": "echo '✅ Nenhuma etapa de build necessária para o backend Kognitiva v3.6.'",
+    "postinstall": "npm install express axios"
   },
   "keywords": [
     "kognitiva",
@@ -40,3 +41,4 @@
     "node": ">=16.0.0"
   }
 }
+
