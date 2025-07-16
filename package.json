@@ -1,13 +1,13 @@
 {
   "name": "kognitiva-backend",
-  "version": "3.6.2",
+  "version": "3.6.3",
   "description": "Backend da plataforma Kognitiva v3.6-finalUX • IA Cognitiva Comercial",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "node tests/simulacoes.js",
-    "build": "echo '✅ Nenhuma etapa de build necessária para o backend Kognitiva v3.6.'",
+    "build": "npm install",
     "postinstall": "npm install express axios"
   },
   "keywords": [
