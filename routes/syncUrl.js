@@ -5,12 +5,13 @@
 const express = require("express");
 const router = express.Router();
 const redisClient = require("../services/redisClient"); // Upstash ou local
+const autenticar = require("../middleware/authMiddleware");
 
 /**
- * Endpoint auxiliar para cache temporário de superprompts
- * Permite salvar ou recuperar superprompts de forma segura
+ * Endpoint protegido para salvar ou recuperar superprompts temporários do cache.
+ * TTL: 1 hora (3600 segundos)
  */
-router.post("/", async (req, res) => {
+router.post("/", autenticar, async (req, res) => {
   try {
     const { token_sessao, superprompt_gerado } = req.body;
 
@@ -18,21 +19,32 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ erro: "token_sessao é obrigatório" });
     }
 
+    const chaveCache = `superprompt:${token_sessao}`;
+
     if (superprompt_gerado) {
-      // Salva no cache com TTL de 1 hora
-      await redisClient.set(`superprompt:${token_sessao}`, superprompt_gerado, { EX: 3600 });
-      return res.status(200).json({ status: "superprompt armazenado com sucesso" });
+      await redisClient.set(chaveCache, superprompt_gerado, { EX: 3600 });
+
+      console.debug(`[CACHE] Superprompt salvo | token_sessao: ${token_sessao}`);
+      return res.status(200).json({
+        status: "superprompt armazenado com sucesso",
+        versao_contexto: req.versao_contexto,
+        responsavel_IA: req.responsavel_IA,
+      });
     } else {
-      // Recupera do cache
-      const cached = await redisClient.get(`superprompt:${token_sessao}`);
+      const cached = await redisClient.get(chaveCache);
+
       if (cached) {
-        return res.status(200).json({ superprompt_gerado: cached });
+        return res.status(200).json({
+          superprompt_gerado: cached,
+          versao_contexto: req.versao_contexto,
+          responsavel_IA: req.responsavel_IA,
+        });
       } else {
         return res.status(404).json({ erro: "superprompt não encontrado no cache" });
       }
     }
   } catch (erro) {
-    console.error("Erro em /proxy/cache_superprompt:", erro);
+    console.error("Erro em /proxy/cache_superprompt:", erro.message);
     res.status(500).json({ erro: "Erro ao acessar cache de superprompt" });
   }
 });
