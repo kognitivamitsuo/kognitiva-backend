@@ -1,11 +1,23 @@
 // Kognitiva v3.6 - Arquivo gerado automaticamente
-// Framework: v3.6-finalUX | Última atualização: 2025-07-15
+// Framework: v3.6-finalUX | Última atualização: 2025-07-16
 // Responsável: Kognitiva • Mitsuo AI Architect
 
 const redis = require("./services/redisUtils");
 const db = require("./models/db");
 const { gerarHash } = require("./utils/hashUtils");
-const { sendToSheetsFallback } = require("./services/feedbackSheets");
+
+// Fallback seguro: usa função mock caso feedbackSheets.js não esteja implementado
+let sendToSheetsFallback = async () => {
+  console.warn("⚠️ fallbackSheets.js ausente — fallback ignorado.");
+};
+try {
+  const fallback = require("./services/feedbackSheets");
+  if (typeof fallback.sendToSheetsFallback === "function") {
+    sendToSheetsFallback = fallback.sendToSheetsFallback;
+  }
+} catch {
+  // Ignorado: módulo opcional, fallback será silencioso
+}
 
 const VERSAO = "v3.6-finalUX";
 const RESPONSAVEL = "Kognitiva • Mitsuo AI Architect";
@@ -44,7 +56,7 @@ async function salvarContextoCompleto(contexto) {
 }
 
 /**
- * Recupera o contexto do Redis. Se não encontrar, tenta PostgreSQL. Se falhar, tenta fallback local.
+ * Recupera o contexto do Redis. Se não encontrar, tenta PostgreSQL. Se falhar, retorna null.
  */
 async function recuperarContextoPorToken(tokenSessao) {
   if (!tokenSessao) return null;
