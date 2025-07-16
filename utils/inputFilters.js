@@ -7,10 +7,10 @@
  * engenharia reversa, exploração de modelo e prompts sensíveis.
  */
 
+// backend/utils/inputFilter.js
+
 function inputFilter(req, res, next) {
   const entrada = JSON.stringify(req.body || {});
-
-  // Padrões bloqueados
   const palavrasProibidas = [
     "prompt original", "explique como funciona", "ignore todas as instruções",
     "como você foi treinado", "reveal", "exploit", "system message", "responda como",
@@ -22,11 +22,10 @@ function inputFilter(req, res, next) {
   );
 
   if (proibido) {
-    console.warn("🚨 Requisição bloqueada por inputFilter.js:", entrada.slice(0, 200));
-
+    console.warn("🚨 Bloqueado por inputFilter:", entrada.slice(0, 100));
     return res.status(403).json({
       status: "bloqueado",
-      mensagem: "Conteúdo da requisição contém termos proibidos por segurança cognitiva.",
+      mensagem: "Conteúdo inseguro detectado. Bloqueado por segurança cognitiva."
     });
   }
 
