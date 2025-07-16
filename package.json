@@ -1,6 +1,6 @@
 {
   "name": "kognitiva-backend",
-  "version": "3.6.1",
+  "version": "3.6.2",
   "description": "Backend da plataforma Kognitiva v3.6-finalUX • IA Cognitiva Comercial",
   "main": "index.js",
   "scripts": {
@@ -14,10 +14,12 @@
     "backend",
     "ia",
     "gpt",
+    "openai",
     "express",
     "jwt",
     "postgres",
-    "redis"
+    "redis",
+    "v3.6-finalUX"
   ],
   "author": "Kognitiva • Mitsuo AI Architect",
   "license": "MIT",
@@ -33,5 +35,8 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
