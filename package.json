@@ -1,6 +1,6 @@
 {
   "name": "kognitiva-backend",
-  "version": "3.6.3",
+  "version": "3.6.4",
   "description": "Backend da plataforma Kognitiva v3.6-finalUX • IA Cognitiva Comercial",
   "main": "index.js",
   "scripts": {
@@ -29,6 +29,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^3.3.2",
     "pg": "^8.11.3",
