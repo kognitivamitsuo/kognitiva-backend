@@ -33,8 +33,8 @@ async function salvarContexto(req, res) {
     contexto.origem_inferencia = contexto.origem_inferencia || "manual/default";
     contexto.contexto_score = contexto.contexto_score || 100;
 
-    // Salva no Redis e PostgreSQL via contextManager
-    await contextManager.salvarContexto(contexto);
+    // ✅ Persistência via contextManager (Redis + PostgreSQL + fallback)
+    await contextManager.salvarContextoCompleto(contexto);
 
     return res.status(200).json({
       status: "Contexto salvo com sucesso",
@@ -42,7 +42,7 @@ async function salvarContexto(req, res) {
     });
 
   } catch (erro) {
-    console.error("Erro ao salvar contexto:", erro);
+    console.error("❌ Erro ao salvar contexto:", erro);
     return res.status(500).json({ erro: "Erro ao processar o contexto" });
   }
 }
@@ -50,3 +50,4 @@ async function salvarContexto(req, res) {
 module.exports = {
   salvarContexto,
 };
+
