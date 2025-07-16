@@ -3,7 +3,7 @@
 // Responsável: Kognitiva • Mitsuo AI Architect
 
 const aiService = require("../services/aiService");
-const { salvarContexto } = require("../models/db");
+const contextManager = require("../contextManager");
 
 const VERSAO = "v3.6-finalUX";
 const RESPONSAVEL = "Kognitiva • Mitsuo AI Architect";
@@ -33,8 +33,8 @@ async function executarIA(req, res) {
 
     const respostaIA = resultado.resposta;
 
-    // Persistência opcional do contexto (B10)
-    await salvarContexto({
+    // ✅ Salvar contexto com fallback (Redis + PostgreSQL + TTL)
+    await contextManager.salvarContextoCompleto({
       token_sessao,
       pergunta,
       respostaIA,
@@ -43,7 +43,7 @@ async function executarIA(req, res) {
       hash_contexto: resultado.hash_contexto || null,
     });
 
-    // Diagnóstico automático (B16) se contexto_score e score_resposta existirem
+    // ✅ Diagnóstico (B16)
     const diagnostico_gerado = contexto_score && resultado.score_resposta
       ? {
           contexto_score,
@@ -71,3 +71,4 @@ async function executarIA(req, res) {
 module.exports = {
   executarIA,
 };
+
